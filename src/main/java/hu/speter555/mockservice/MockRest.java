@@ -41,6 +41,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import hu.icellmobilsoft.coffee.cdi.logger.AppLogger;
@@ -60,8 +61,8 @@ import org.apache.commons.lang3.StringUtils;
 @Path("/")
 public class MockRest {
 
-    private final String REDIRECT_HEADER_URL = "MOCKSERVICE-REDIRECT-URL";
-    private final String REDIRECT_HEADER_HEADERS = "MOCKSERVICE-REDIRECT-HEADERS";
+    private static final String REDIRECT_HEADER_URL = "MOCKSERVICE-REDIRECT-URL";
+    private static final String REDIRECT_HEADER_HEADERS = "MOCKSERVICE-REDIRECT-HEADERS";
 
     /**
      * For logging...
@@ -238,6 +239,7 @@ public class MockRest {
         String response = null;
         if (StringUtils.isNotBlank(redirectUrl)) {
             String method = httpServletRequest.getMethod();
+            MediaType mediaType = MediaType.valueOf(httpServletRequest.getHeader(HttpHeaders.ACCEPT));
             String request = null;
             if (StringUtils.containsAny(method, HttpMethod.PUT, HttpMethod.PATCH, HttpMethod.POST)) {
                 try {
@@ -268,13 +270,13 @@ public class MockRest {
                     response = apacheHttpClient.sendClientOptions(redirectUrl);
                     break;
                 case HttpMethod.PATCH:
-                    response = apacheHttpClient.sendClientPatch(redirectUrl, request);
+                    response = apacheHttpClient.sendClientPatch(redirectUrl, request, mediaType);
                     break;
                 case HttpMethod.POST:
-                    response = apacheHttpClient.sendClientPost(redirectUrl, request);
+                    response = apacheHttpClient.sendClientPost(redirectUrl, request, mediaType);
                     break;
                 case HttpMethod.PUT:
-                    response = apacheHttpClient.sendClientPut(redirectUrl, request);
+                    response = apacheHttpClient.sendClientPut(redirectUrl, request, mediaType);
                     break;
                 default:
                     break;

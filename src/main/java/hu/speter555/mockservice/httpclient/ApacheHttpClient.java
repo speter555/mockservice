@@ -20,12 +20,12 @@
 package hu.speter555.mockservice.httpclient;
 
 import java.io.IOException;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.enterprise.context.Dependent;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import hu.icellmobilsoft.coffee.dto.exception.AccessDeniedException;
@@ -38,11 +38,13 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpOptions;
 import org.apache.http.client.methods.HttpPatch;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
@@ -79,8 +81,8 @@ public class ApacheHttpClient extends BaseApacheHttpClient {
      * @return response in String
      * @throws BaseException if error
      */
-    public String sendClientPost(String url, String request) throws BaseException {
-        HttpResponse response = super.sendClientBasePost(url, ContentType.APPLICATION_JSON, request);
+    public String sendClientPost(String url, String request, MediaType mediaType) throws BaseException {
+        HttpResponse response = sendClientBasePost(url, request, mediaType);
         return handleResponse(response);
     }
 
@@ -92,8 +94,8 @@ public class ApacheHttpClient extends BaseApacheHttpClient {
      * @return response in String
      * @throws BaseException if error
      */
-    public String sendClientPut(String url, String request) throws BaseException {
-        HttpResponse response = super.sendClientBasePut(url, ContentType.APPLICATION_JSON, request);
+    public String sendClientPut(String url, String request, MediaType mediaType) throws BaseException {
+        HttpResponse response = sendClientBasePut(url, request, mediaType);
         return handleResponse(response);
     }
 
@@ -141,8 +143,8 @@ public class ApacheHttpClient extends BaseApacheHttpClient {
      * @return response in String
      * @throws BaseException if error
      */
-    public String sendClientPatch(String url, String request) throws BaseException {
-        HttpResponse response = sendClientBasePatch(url, request);
+    public String sendClientPatch(String url, String request, MediaType mediaType) throws BaseException {
+        HttpResponse response = sendClientBasePatch(url, request, mediaType);
         return handleResponse(response);
     }
 
@@ -156,37 +158,43 @@ public class ApacheHttpClient extends BaseApacheHttpClient {
     }
 
     @Override
-    protected void beforeAll(HttpRequestBase request) throws BaseException {
+    protected void beforeAll(HttpRequestBase request) {
         for (Map.Entry<String, String> header : additionalHeader.entrySet()) {
             request.addHeader(header.getKey(), header.getValue());
         }
     }
 
     private HttpResponse sendClientBaseHead(String url) throws BaseException {
-
-        HttpHead head = new HttpHead(url);
-        CloseableHttpClient client = getCloseableHttpClient(url);
-
-        try {
-            beforeAll(head);
-            logRequest(head);
-            return client.execute(head);
-        } catch (ClientProtocolException e) {
-            throw new TechnicalException(CoffeeFaultType.OPERATION_FAILED, "HTTP protocol exception: " + e.getLocalizedMessage(), e);
-        } catch (IOException e) {
-            throw new TechnicalException(CoffeeFaultType.OPERATION_FAILED, "IOException in call: " + e.getLocalizedMessage(), e);
-        }
+        return sendClientBaseCall(new HttpHead(url), null, null);
     }
 
     private HttpResponse sendClientBaseOptions(String url) throws BaseException {
+        return sendClientBaseCall(new HttpOptions(url), null, null);
+    }
 
-        HttpOptions head = new HttpOptions(url);
-        CloseableHttpClient client = getCloseableHttpClient(url);
+    private HttpResponse sendClientBasePatch(String url, String request, MediaType mediaType) throws BaseException {
+        return sendClientBaseCall(new HttpPatch(url), request, mediaType);
+    }
+
+    private HttpResponse sendClientBasePost(String url, String request, MediaType mediaType) throws BaseException {
+        return sendClientBaseCall(new HttpPost(url), request, mediaType);
+    }
+    private HttpResponse sendClientBasePut(String url, String request, MediaType mediaType) throws BaseException {
+        return sendClientBaseCall(new HttpPut(url), request, mediaType);
+    }
+
+
+    private HttpResponse sendClientBaseCall(HttpRequestBase httpRequest, String request, MediaType mediaType) throws BaseException {
+        CloseableHttpClient client = getCloseableHttpClient(httpRequest);
 
         try {
-            beforeAll(head);
-            logRequest(head);
-            return client.execute(head);
+            beforeAll(httpRequest);
+            if (httpRequest instanceof HttpEntityEnclosingRequestBase) {
+                StringEntity stringEntity = new StringEntity(request, mediaType.getType());
+                ((HttpEntityEnclosingRequestBase) httpRequest).setEntity(stringEntity);
+            }
+            logRequest(httpRequest, org.apache.commons.lang3.StringUtils.abbreviate(request, 80));
+            return client.execute(httpRequest);
         } catch (ClientProtocolException e) {
             throw new TechnicalException(CoffeeFaultType.OPERATION_FAILED, "HTTP protocol exception: " + e.getLocalizedMessage(), e);
         } catch (IOException e) {
@@ -194,29 +202,10 @@ public class ApacheHttpClient extends BaseApacheHttpClient {
         }
     }
 
-
-    private HttpResponse sendClientBasePatch(String url, String request) throws BaseException {
-
-        HttpPatch patch = new HttpPatch(url);
-        CloseableHttpClient client = getCloseableHttpClient(url);
-
-        try {
-            beforeAll(patch);
-            StringEntity stringEntity = new StringEntity(request, "application/json");
-            patch.setEntity(stringEntity);
-            logRequest(patch, org.apache.commons.lang3.StringUtils.abbreviate(new String(request), 80));
-            return client.execute(patch);
-        } catch (ClientProtocolException e) {
-            throw new TechnicalException(CoffeeFaultType.OPERATION_FAILED, "HTTP protocol exception: " + e.getLocalizedMessage(), e);
-        } catch (IOException e) {
-            throw new TechnicalException(CoffeeFaultType.OPERATION_FAILED, "IOException in call: " + e.getLocalizedMessage(), e);
-        }
-    }
-
-    private CloseableHttpClient getCloseableHttpClient(String url) throws BaseException {
+    private CloseableHttpClient getCloseableHttpClient(HttpRequestBase httpRequestBase) throws BaseException {
         RequestConfig config = createRequestConfig().build();
         CloseableHttpClient client = createHttpClientBuilder(config).build();
-        handleSSL(client, URI.create(url));
+        handleSSL(client, httpRequestBase.getURI());
         return client;
     }
 
