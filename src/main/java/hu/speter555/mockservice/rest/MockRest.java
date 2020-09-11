@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package hu.speter555.mockservice;
+package hu.speter555.mockservice.rest;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -28,17 +28,7 @@ import java.util.Objects;
 import javax.enterprise.inject.Model;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.HEAD;
 import javax.ws.rs.HttpMethod;
-import javax.ws.rs.OPTIONS;
-import javax.ws.rs.PATCH;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -47,23 +37,23 @@ import javax.ws.rs.core.Response;
 import hu.icellmobilsoft.coffee.cdi.logger.AppLogger;
 import hu.icellmobilsoft.coffee.cdi.logger.ThisLogger;
 import hu.icellmobilsoft.coffee.dto.exception.BaseException;
+import hu.icellmobilsoft.coffee.rest.rest.BaseRestService;
 import hu.speter555.mockservice.httpclient.ApacheHttpClient;
 import hu.speter555.mockservice.util.CacheFileHelper;
 import hu.speter555.mockservice.util.FileUtil;
 import org.apache.commons.lang3.StringUtils;
 
 /**
- * Rest endpoint of all
+ * Rest endpoints implementations
  *
  * @author speter555
  */
 @Model
-@Path("/")
-public class MockRest {
+public class MockRest extends BaseRestService implements IMockRest {
 
     private static final String REDIRECT_HEADER_URL = "MOCKSERVICE-REDIRECT-URL";
     private static final String REDIRECT_HEADER_HEADERS = "MOCKSERVICE-REDIRECT-HEADERS";
-
+    
     /**
      * For logging...
      */
@@ -76,6 +66,13 @@ public class MockRest {
      */
     @Inject
     private CacheFileHelper cacheFileHelper;
+
+
+    /**
+     * Apache HTTP client for redirect calls
+     */
+    @Inject
+    private ApacheHttpClient apacheHttpClient;
 
     /**
      * Request
@@ -90,110 +87,57 @@ public class MockRest {
     private HttpHeaders httpHeaders;
 
     /**
-     * Apache HTTP client for redirect calls
+     * {@inheritDoc}
      */
-    @Inject
-    private ApacheHttpClient apacheHttpClient;
-
-    /**
-     * All Get endpoints
-     *
-     * @return mock response
-     * @throws BaseException if error
-     */
-    @GET
-    @Path("{any: .*}")
-    @Consumes
-    @Produces
+    @Override
     public Response get() throws BaseException {
         return getFile();
     }
 
     /**
-     * All Delete endpoints
-     *
-     * @return mock response
-     * @throws BaseException if error
+     * {@inheritDoc}
      */
-    @DELETE
-    @Path("{any: .*}")
-    @Consumes
-    @Produces
+    @Override
     public Response delete() throws BaseException {
         return getFile();
     }
 
     /**
-     * All Options endpoints
-     * endpoint
-     *
-     * @return mock response
-     * @throws BaseException if error
+     * {@inheritDoc}
      */
-    @OPTIONS
-    @Path("{any: .*}")
-    @Consumes
-    @Produces
+    @Override
     public Response options() throws BaseException {
         return getFile();
     }
 
     /**
-     * All Post endpoints
-     * endpoint
-     *
-     * @return mock response
-     * @throws BaseException if error
+     * {@inheritDoc}
      */
-    @POST
-    @Path("{any: .*}")
-    @Consumes
-    @Produces
+    @Override
     public Response post() throws BaseException {
         return getFile();
     }
 
     /**
-     * All Put endpoints
-     * endpoint
-     *
-     * @return mock response
-     * @throws BaseException if error
+     * {@inheritDoc}
      */
-    @PUT
-    @Path("{any: .*}")
-    @Consumes
-    @Produces
+    @Override
     public Response put() throws BaseException {
         return getFile();
     }
 
     /**
-     * All Head endpoints
-     * endpoint
-     *
-     * @return mock response
-     * @throws BaseException if error
+     * {@inheritDoc}
      */
-    @HEAD
-    @Path("{any: .*}")
-    @Consumes
-    @Produces
+    @Override
     public Response head() throws BaseException {
         return getFile();
     }
 
     /**
-     * All Patch endpoints
-     * endpoint
-     *
-     * @return mock response
-     * @throws BaseException if error
+     * {@inheritDoc}
      */
-    @PATCH
-    @Path("{any: .*}")
-    @Consumes
-    @Produces
+    @Override
     public Response patch() throws BaseException {
         return getFile();
     }
@@ -204,7 +148,7 @@ public class MockRest {
      * @return mock response with http 200 status, end the entity
      * @throws BaseException if error is created
      */
-    private Response getFile() throws BaseException {
+    public Response getFile() throws BaseException {
         String path = httpServletRequest.getPathInfo().replaceFirst("/", StringUtils.EMPTY);
         logger.info("path: " + path);
         if (StringUtils.isBlank(path)) {
@@ -284,5 +228,4 @@ public class MockRest {
         }
         return response;
     }
-
 }

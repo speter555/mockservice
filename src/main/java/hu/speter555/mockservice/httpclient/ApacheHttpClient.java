@@ -78,6 +78,7 @@ public class ApacheHttpClient extends BaseApacheHttpClient {
      *
      * @param url     called url
      * @param request sended object
+     * @param mediaType MediaType of request
      * @return response in String
      * @throws BaseException if error
      */
@@ -91,6 +92,7 @@ public class ApacheHttpClient extends BaseApacheHttpClient {
      *
      * @param url     called url
      * @param request sended object
+     * @param mediaType MediaType of request
      * @return response in String
      * @throws BaseException if error
      */
@@ -140,6 +142,7 @@ public class ApacheHttpClient extends BaseApacheHttpClient {
      *
      * @param url     called url
      * @param request sended object
+     * @param mediaType MediaType of request
      * @return response in String
      * @throws BaseException if error
      */
