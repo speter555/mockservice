@@ -12,7 +12,8 @@ categories:
       - 'bug'
   - title: '🧰 Maintenance'
     label: 'chore'
-change-template: '- $TITLE ($URL) //n//t $BODY'
+change-template: '- $TITLE ($URL) /
+  $BODY'
 change-title-escapes: '\<>*_&'
 template: |
   ## Changes
