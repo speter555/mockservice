@@ -12,7 +12,8 @@ categories:
       - 'bug'
   - title: '🧰 Maintenance'
     label: 'chore'
-change-template: '- $NUMBER $TITLE ($URL) \\n\\t[$BODY]    - $TITLE @$AUTHOR (#$NUMBER)'
+change-template: '- $TITLE ($URL) //n//t $BODY'
+change-title-escapes: '\<>*_&'
 template: |
   ## Changes
 
