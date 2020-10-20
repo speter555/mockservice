@@ -12,7 +12,7 @@ categories:
       - 'bug'
   - title: '🧰 Maintenance'
     label: 'chore'
-change-template: '- $NUMBER $TITLE ($URL) \n\t[$BODY]    - $TITLE @$AUTHOR (#$NUMBER)'
+change-template: '- $NUMBER $TITLE ($URL) \\n\\t[$BODY]    - $TITLE @$AUTHOR (#$NUMBER)'
 template: |
   ## Changes
 
